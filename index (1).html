@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fix My City — One photo. One ticket. One fixed streetlight.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0F1B2D;
+    --panel:#16283F;
+    --panel-2:#1E3352;
+    --paper:#EDEFE9;
+    --amber:#F0A202;
+    --amber-dim:#C8850A;
+    --green:#3FA796;
+    --ink-line: rgba(237,239,233,0.14);
+    --text:#EAF0F2;
+    --text-dim:#9FB0C0;
+    --radius:8px;
+    --maxw:1180px;
+    color-scheme: dark;
+  }
+  [data-theme="light"]{
+    --navy:#EDEFE9;
+    --panel:#FFFFFF;
+    --panel-2:#F4F5F0;
+    --paper:#0F1B2D;
+    --amber:#C8850A;
+    --amber-dim:#A66E08;
+    --green:#2A7F71;
+    --ink-line: rgba(15,27,45,0.12);
+    --text:#0F1B2D;
+    --text-dim:#4C5C6E;
+    color-scheme: light;
+  }
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0; background:var(--navy); color:var(--text);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    transition:background .3s ease, color .3s ease;
+    overflow-x:hidden;
+  }
+  a{ color:inherit; }
+  .wrap{ max-width:var(--maxw); margin:0 auto; padding:0 24px; }
+  h1,h2,h3{ font-family:'Space Grotesk', sans-serif; font-weight:600; margin:0; letter-spacing:-0.01em; }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:0.14em;
+    text-transform:uppercase; color:var(--amber);
+  }
+  :focus-visible{ outline:2px solid var(--amber); outline-offset:3px; }
+
+  /* NAV */
+  header{
+    position:sticky; top:0; z-index:60;
+    background:color-mix(in srgb, var(--navy) 88%, transparent);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--ink-line);
+    transition:box-shadow .3s ease;
+  }
+  header.scrolled{ box-shadow:0 8px 30px -12px rgba(0,0,0,0.5); }
+  nav{ display:flex; align-items:center; justify-content:space-between; padding:16px 24px; max-width:var(--maxw); margin:0 auto; }
+  .logo{ display:flex; align-items:center; gap:10px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:19px; text-decoration:none; color:var(--text); }
+  .logo .mark{ width:24px; height:24px; border-radius:5px; background:var(--amber); display:flex; align-items:center; justify-content:center; color:var(--navy); font-size:13px; font-weight:700; }
+  .nav-links{ display:flex; gap:26px; align-items:center; }
+  .nav-links a{ text-decoration:none; font-size:14px; color:var(--text-dim); transition:color .2s; }
+  .nav-links a:hover{ color:var(--text); }
+  .nav-right{ display:flex; align-items:center; gap:14px; }
+  .btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; font-family:'IBM Plex Sans',sans-serif; font-weight:600; font-size:14.5px; padding:11px 20px; border-radius:var(--radius); text-decoration:none; cursor:pointer; border:1px solid transparent; transition:transform .15s, background .2s, border-color .2s; }
+  .btn:active{ transform:translateY(1px); }
+  .btn-primary{ background:linear-gradient(135deg, var(--amber), var(--amber-dim)); color:#161005; box-shadow:0 8px 24px -8px rgba(240,162,2,0.55); }
+  .btn-primary:hover{ box-shadow:0 10px 30px -6px rgba(240,162,2,0.7); transform:translateY(-1px); }
+  .btn-ghost{ background:transparent; color:var(--text); border-color:var(--ink-line); }
+  .btn-ghost:hover{ border-color:var(--text-dim); }
+  .theme-toggle{ width:38px; height:38px; border-radius:50%; border:1px solid var(--ink-line); background:transparent; color:var(--text); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .theme-toggle svg{ width:17px; height:17px; }
+
+  /* HERO */
+  .hero{ position:relative; padding:88px 0 76px; border-bottom:1px solid var(--ink-line); overflow:hidden; }
+  .blueprint-grid{ position:absolute; inset:0; z-index:0; opacity:.5;
+    background-image: linear-gradient(var(--ink-line) 1px, transparent 1px), linear-gradient(90deg, var(--ink-line) 1px, transparent 1px);
+    background-size:36px 36px;
+    mask-image: radial-gradient(ellipse 900px 500px at 70% 20%, black, transparent 75%);
+  }
+  .glow-blob{ position:absolute; z-index:0; border-radius:50%; filter:blur(90px); pointer-events:none; }
+  .glow-1{ width:520px; height:520px; top:-220px; right:-140px; background:radial-gradient(circle, rgba(240,162,2,0.28), transparent 70%); }
+  .glow-2{ width:420px; height:420px; bottom:-240px; left:-120px; background:radial-gradient(circle, rgba(63,167,150,0.16), transparent 70%); }
+  .reveal{ opacity:0; transform:translateY(18px); transition:opacity .7s ease, transform .7s ease; }
+  .reveal.in{ opacity:1; transform:translateY(0); }
+  .hero-grid{ position:relative; z-index:1; display:grid; grid-template-columns:1.05fr 0.95fr; gap:56px; align-items:center; }
+  .hero h1{ font-size:clamp(34px,4.6vw,54px); line-height:1.06; margin:16px 0 20px; }
+  .hero h1 span{ color:var(--amber); }
+  .hero p{ font-size:17px; line-height:1.6; color:var(--text-dim); max-width:480px; margin:0 0 30px; }
+  .hero-cta{ display:flex; gap:14px; flex-wrap:wrap; }
+
+  /* DEMO CARD (signature interactive element) */
+  .demo-card{ background:var(--panel); border:1px solid var(--ink-line); border-radius:16px; padding:22px; box-shadow:0 40px 80px -24px rgba(0,0,0,0.6), 0 0 0 1px rgba(240,162,2,0.06), 0 2px 40px -8px rgba(240,162,2,0.12); position:relative; }
+  .demo-card::before{ content:''; position:absolute; inset:-1px; border-radius:16px; padding:1px; background:linear-gradient(135deg, rgba(240,162,2,0.35), transparent 40%, transparent 60%, rgba(63,167,150,0.25)); -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none; }
+  .demo-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+  .demo-head .dots{ display:flex; gap:6px; }
+  .demo-head .dots span{ width:8px; height:8px; border-radius:50%; background:var(--ink-line); }
+  .demo-head .label{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-dim); }
+  .demo-photo{
+    height:150px; border-radius:8px; border:1.5px dashed var(--ink-line);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+    background:var(--panel-2); cursor:pointer; text-align:center; padding:12px;
+    transition:border-color .2s;
+  }
+  .demo-photo:hover{ border-color:var(--amber); }
+  .demo-photo svg{ width:30px; height:30px; color:var(--text-dim); }
+  .demo-photo .cta-label{ font-size:13.5px; color:var(--text-dim); font-weight:500; }
+  .demo-photo.filled{ background:linear-gradient(135deg, #2a3f2a, #1c2b1c); border-style:solid; border-color:var(--green); align-items:center; justify-content:center; }
+  .demo-log{ margin-top:16px; display:flex; flex-direction:column; gap:9px; min-height:96px; }
+  .demo-log .line{
+    font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--text-dim);
+    opacity:0; transform:translateY(4px);
+    animation:none;
+    display:flex; gap:8px; align-items:baseline;
+  }
+  .demo-log .line.show{ animation:lineIn .4s ease forwards; }
+  .demo-log .line .ok{ color:var(--green); }
+  .demo-log .line .tag{ color:var(--amber); }
+  @keyframes lineIn{ to{ opacity:1; transform:translateY(0); } }
+  .demo-reset{ margin-top:14px; font-size:12.5px; color:var(--text-dim); background:none; border:none; cursor:pointer; text-decoration:underline; padding:0; }
+  .demo-reset:hover{ color:var(--text); }
+
+  /* SECTIONS */
+  section{ padding:84px 0; }
+  .section-head{ max-width:580px; margin:0 0 46px; }
+  .section-head h2{ font-size:clamp(27px,3.2vw,36px); margin-top:12px; line-height:1.15; }
+  .section-head p{ color:var(--text-dim); font-size:16px; line-height:1.6; margin-top:14px; }
+
+  /* CATEGORY GRID */
+  .cat-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--ink-line); border:1px solid var(--ink-line); border-radius:10px; overflow:hidden; }
+  .cat{ background:var(--panel); padding:24px 18px; display:flex; flex-direction:column; gap:12px; transition:background .2s, transform .2s; }
+  .cat:hover{ background:var(--panel-2); transform:translateY(-3px); }
+  .cat .cat-icon{ width:42px; height:42px; border-radius:10px; background:linear-gradient(135deg, rgba(240,162,2,0.16), rgba(240,162,2,0.04)); display:flex; align-items:center; justify-content:center; }
+  .cat svg{ width:20px; height:20px; color:var(--amber); }
+  .cat span{ font-size:14px; font-weight:500; }
+  @media (max-width:860px){ .cat-grid{ grid-template-columns:repeat(2,1fr); } }
+
+  /* PIPELINE */
+  .pipeline{ position:relative; display:grid; grid-template-columns:repeat(4,1fr); gap:0; }
+  .pipe-line{ position:absolute; top:9px; left:0; right:0; height:2px; background:var(--ink-line); z-index:0; }
+  .pipe-line-fill{ position:absolute; top:9px; left:0; height:2px; background:var(--amber); z-index:1; width:0%; transition:width 1.6s ease; }
+  .pipe-step{ position:relative; z-index:2; padding-top:32px; }
+  .pipe-dot{ position:absolute; top:0; left:0; width:20px; height:20px; border-radius:50%; background:var(--panel); border:2px solid var(--ink-line); transition:border-color .3s, background .3s; }
+  .pipe-step.active .pipe-dot{ border-color:var(--amber); background:var(--amber); }
+  .pipe-step h3{ font-size:15.5px; margin-bottom:6px; }
+  .pipe-step p{ font-size:13.5px; color:var(--text-dim); line-height:1.55; margin:0; padding-right:14px; }
+  @media (max-width:800px){
+    .pipeline{ grid-template-columns:1fr; gap:26px; }
+    .pipe-line, .pipe-line-fill{ display:none; }
+    .pipe-step{ padding-top:0; padding-left:32px; }
+    .pipe-dot{ top:2px; left:0; }
+  }
+
+  /* MAP */
+  .map-shell{ border:1px solid var(--ink-line); border-radius:12px; overflow:hidden; background:var(--panel); }
+  .map-toolbar{ display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid var(--ink-line); }
+  .map-toolbar .label{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-dim); }
+  .map-svg{ display:block; width:100%; height:auto; }
+  .pin{ cursor:pointer; }
+  .pin circle.pulse{ animation:pulse 2.4s ease-in-out infinite; transform-origin:center; }
+  .pin:nth-child(2) circle.pulse{ animation-delay:.4s; }
+  .pin:nth-child(3) circle.pulse{ animation-delay:.8s; }
+  .pin:nth-child(4) circle.pulse{ animation-delay:1.2s; }
+  @keyframes pulse{ 0%{ opacity:.5; transform:scale(1); } 70%{ opacity:0; transform:scale(2.6); } 100%{ opacity:0; } }
+  .pin-tip{
+    position:absolute; background:var(--navy); color:var(--text); border:1px solid var(--ink-line);
+    padding:8px 11px; border-radius:6px; font-size:12.5px; font-family:'JetBrains Mono',monospace;
+    pointer-events:none; opacity:0; transition:opacity .15s; white-space:nowrap; z-index:5;
+  }
+  .map-wrap{ position:relative; }
+
+  /* HONESTY */
+  .honesty{ border-top:1px solid var(--ink-line); border-bottom:1px solid var(--ink-line); padding:52px 0; }
+  .honesty .wrap{ display:flex; gap:28px; align-items:flex-start; flex-wrap:wrap; }
+  .honesty-mark{ font-family:'Space Grotesk',sans-serif; font-size:38px; color:var(--amber); line-height:1; }
+  .honesty p{ font-size:15.5px; color:var(--text-dim); max-width:660px; line-height:1.65; margin:0; }
+  .honesty strong{ color:var(--text); }
+
+  /* CTA FINAL */
+  .cta-final{ text-align:center; padding:100px 0; }
+  .cta-final h2{ font-size:clamp(28px,4vw,44px); max-width:620px; margin:0 auto 26px; line-height:1.15; }
+  .cta-final .hero-cta{ justify-content:center; }
+
+  footer{ border-top:1px solid var(--ink-line); padding:34px 0; }
+  footer .wrap{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; }
+  footer .foot-links{ display:flex; gap:22px; }
+  footer a{ text-decoration:none; font-size:13.5px; color:var(--text-dim); }
+  footer a:hover{ color:var(--text); }
+  .foot-mark{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-dim); }
+
+  @media (max-width:900px){
+    .hero-grid{ grid-template-columns:1fr; }
+  }
+  @media (max-width:640px){
+    .nav-links{ display:none; }
+    section{ padding:60px 0; }
+    .hero{ padding:60px 0 52px; }
+  }
+
+  #egg{ position:fixed; inset:0; z-index:999; display:none; align-items:center; justify-content:center; background:rgba(15,27,45,0.94); color:var(--paper); text-align:center; font-family:'Space Grotesk',sans-serif; font-size:20px; padding:24px; }
+  #egg.show{ display:flex; }
+  #egg span{ color:var(--amber); }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav>
+    <a class="logo" href="#top"><span class="mark">FC</span>Fix My City</a>
+    <div class="nav-links">
+      <a href="#demo">Report an issue</a>
+      <a href="#pipeline">How it's fixed</a>
+      <a href="#map">Live map</a>
+      <a href="#honesty">Our data</a>
+    </div>
+    <div class="nav-right">
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle light and dark mode">
+        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36A5.4 5.4 0 0 1 12 3z"/></svg>
+      </button>
+      <a class="btn btn-primary" href="#demo">Report an issue</a>
+    </div>
+  </nav>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="blueprint-grid" aria-hidden="true"></div>
+    <div class="glow-blob glow-1" aria-hidden="true"></div>
+    <div class="glow-blob glow-2" aria-hidden="true"></div>
+    <div class="wrap hero-grid">
+      <div>
+        <div class="eyebrow">Civic infrastructure, fixed faster</div>
+        <h1>One photo.<br>One ticket.<br>One <span>fixed</span> streetlight.</h1>
+        <p>Point your camera at the pothole, the downed branch, the streetlight that's been dark for a week. Fix My City identifies what it is, works out which municipal department owns it, and opens a tracked ticket — no forms, no guessing who to call.</p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="#demo">Try reporting one</a>
+          <a class="btn btn-ghost" href="#pipeline">See how tickets move</a>
+        </div>
+      </div>
+
+      <div id="demo" class="demo-card">
+        <div class="demo-head">
+          <div class="dots"><span></span><span></span><span></span></div>
+          <div class="label">fixmycity.app/new-report</div>
+        </div>
+        <div class="demo-photo" id="demoPhoto" role="button" tabindex="0" aria-label="Simulate photographing a civic issue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+          <span class="cta-label">Tap to photograph an issue</span>
+        </div>
+        <div class="demo-log" id="demoLog"></div>
+        <button class="demo-reset" id="demoReset" style="display:none;">Reset demo</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="categories">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="eyebrow">What it recognizes</div>
+        <h2>Seven categories, one camera</h2>
+        <p>The classifier only needs to be right about what's in front of it. Routing to the correct department is Fix My City's job, not yours.</p>
+      </div>
+      <div class="cat-grid reveal">
+        <div class="cat"><div class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12h20M6 12l3-6h6l3 6"/></svg></div><span>Potholes</span></div>
+        <div class="cat"><div class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v6M8 9h8l2 12H6z"/></svg></div><span>Water leakage</span></div>
+        <div class="cat"><div class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 8h14l-1.5 12h-11z"/><path d="M9 8V5h6v3"/></svg></div><span>Garbage</span></div>
+        <div class="cat"><div class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="9" r="5"/><path d="M12 14v7M9 21h6"/></svg></div><span>Streetlights</span></div>
+        <div class="cat"><div class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3c4 3 6 6 6 9a6 6 0 0 1-12 0c0-3 2-6 6-9z"/><path d="M12 15v6"/></svg></div><span>Dangerous trees</span></div>
+        <div class="cat"><div class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="2" width="6" height="16" rx="3"/><path d="M12 18v4"/></svg></div><span>Traffic signals</span></div>
+        <div class="cat"><div class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 21V9l8-5 8 5v12H4z"/><path d="M4 21h16M10 21v-6h4v6"/></svg></div><span>Dangerous structures</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="pipeline">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="eyebrow">From photo to fixed</div>
+        <h2>Every ticket moves through the same four stages</h2>
+        <p>Scroll here, or open a ticket above — the same pipeline runs either way.</p>
+      </div>
+      <div class="pipeline reveal" id="pipelineRow">
+        <div class="pipe-line"></div>
+        <div class="pipe-line-fill" id="pipeFill"></div>
+        <div class="pipe-step" data-i="0"><div class="pipe-dot"></div><h3>Submitted</h3><p>Photo, GPS location, and category logged in under ten seconds.</p></div>
+        <div class="pipe-step" data-i="1"><div class="pipe-dot"></div><h3>Assigned</h3><p>Routed automatically to the municipal department that owns the issue.</p></div>
+        <div class="pipe-step" data-i="2"><div class="pipe-dot"></div><h3>Technician dispatched</h3><p>Field crew notified with the exact location and photo attached.</p></div>
+        <div class="pipe-step" data-i="3"><div class="pipe-dot"></div><h3>Fixed</h3><p>Closed with photographic proof, visible to the person who reported it.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="map">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="eyebrow">Open tickets nearby</div>
+        <h2>See what's already been reported</h2>
+        <p>Before you file a duplicate, check what's already in the queue for your block.</p>
+      </div>
+      <div class="map-shell reveal">
+        <div class="map-toolbar">
+          <div class="label">sector-12 · 4 open tickets</div>
+          <div class="label">live</div>
+        </div>
+        <div class="map-wrap">
+          <svg class="map-svg" viewBox="0 0 1100 380" id="mapSvg">
+            <defs>
+              <pattern id="streetgrid" width="70" height="70" patternUnits="userSpaceOnUse">
+                <path d="M 70 0 L 0 0 0 70" fill="none" stroke="var(--ink-line)" stroke-width="1"/>
+              </pattern>
+            </defs>
+            <rect width="1100" height="380" fill="var(--panel)"/>
+            <rect width="1100" height="380" fill="url(#streetgrid)"/>
+            <path d="M0,190 H1100 M550,0 V380 M0,90 H1100 M0,290 H1100 M270,0 V380 M830,0 V380" stroke="var(--ink-line)" stroke-width="2"/>
+
+            <g class="pin" data-cat="Streetlight" data-id="48291" transform="translate(300,140)">
+              <circle class="pulse" r="16" fill="var(--amber)"/>
+              <circle r="7" fill="var(--amber)" stroke="var(--panel)" stroke-width="2"/>
+            </g>
+            <g class="pin" data-cat="Pothole" data-id="48304" transform="translate(640,110)">
+              <circle class="pulse" r="16" fill="var(--amber)"/>
+              <circle r="7" fill="var(--amber)" stroke="var(--panel)" stroke-width="2"/>
+            </g>
+            <g class="pin" data-cat="Fixed — Water leakage" data-id="48250" transform="translate(430,250)">
+              <circle class="pulse" r="16" fill="var(--green)"/>
+              <circle r="7" fill="var(--green)" stroke="var(--panel)" stroke-width="2"/>
+            </g>
+            <g class="pin" data-cat="Dangerous tree" data-id="48312" transform="translate(900,230)">
+              <circle class="pulse" r="16" fill="var(--amber)"/>
+              <circle r="7" fill="var(--amber)" stroke="var(--panel)" stroke-width="2"/>
+            </g>
+          </svg>
+          <div class="pin-tip" id="pinTip"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="honesty" class="honesty">
+    <div class="wrap">
+      <div class="honesty-mark reveal">”</div>
+      <p><strong>The map above is illustrative, not live traffic.</strong> Fix My City hasn't launched in a city yet, so there's no real ticket volume to show you — and we're not going to invent a counter that says otherwise. The four categories, the ticket numbers, and the pipeline stages are the real product mechanics; the specific pins are examples of what your neighborhood's board would look like on day one.</p>
+    </div>
+  </section>
+
+  <section class="cta-final">
+    <div class="wrap">
+      <div class="eyebrow">Get started</div>
+      <h2>The next broken streetlight on your street is one photo away from a ticket.</h2>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#demo">Try reporting one</a>
+        <a class="btn btn-ghost" href="#map">See the map</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-mark">Fix My City — one ticket at a time</div>
+    <div class="foot-links">
+      <a href="#demo">Report an issue</a>
+      <a href="#pipeline">How it's fixed</a>
+      <a href="#map">Live map</a>
+    </div>
+  </div>
+</footer>
+
+<div id="egg" role="dialog" aria-label="Easter egg">
+  <div>Ticket #00001 — filed by whoever finds this.<br><br><span>↑ ↑ ↓ ↓ ← → ← → B A</span><br><br>Status: Fixed, before anyone else noticed it was broken.</div>
+</div>
+
+<script>
+  // Theme toggle (robust against file:// storage restrictions)
+  const root = document.documentElement;
+  const toggle = document.getElementById('themeToggle');
+  const icon = document.getElementById('themeIcon');
+  function setTheme(t){
+    root.setAttribute('data-theme', t);
+    try { localStorage.setItem('fmc-theme', t); } catch (e) {}
+    icon.innerHTML = t === 'light'
+      ? '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'
+      : '<path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36A5.4 5.4 0 0 1 12 3z"/>';
+  }
+  let saved = 'dark';
+  try { saved = localStorage.getItem('fmc-theme') || 'dark'; } catch (e) {}
+  setTheme(saved);
+  toggle.addEventListener('click', () => setTheme(root.getAttribute('data-theme') === 'light' ? 'dark' : 'light'));
+
+  // Demo card interaction
+  const demoPhoto = document.getElementById('demoPhoto');
+  const demoLog = document.getElementById('demoLog');
+  const demoReset = document.getElementById('demoReset');
+  const pipeFill = document.getElementById('pipeFill');
+  const pipeSteps = document.querySelectorAll('.pipe-step');
+  let demoRunning = false;
+
+  function runDemo(){
+    if (demoRunning) return;
+    demoRunning = true;
+    demoPhoto.classList.add('filled');
+    demoPhoto.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:26px;height:26px;color:var(--green);"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span class="cta-label" style="color:var(--green);">Photo captured</span>';
+    demoLog.innerHTML = '';
+    demoReset.style.display = 'none';
+
+    const lines = [
+      { html: '<span class="ok">✓</span> Analyzing image…', delay: 300 },
+      { html: '<span class="tag">Detected:</span> Streetlight, base cracked', delay: 900 },
+      { html: '<span class="tag">Location:</span> Sector 12, Elm & 4th', delay: 1500 },
+      { html: '<span class="tag">Routed to:</span> Municipal Electrical Dept.', delay: 2100 },
+      { html: '<span class="ok">✓</span> Complaint #48291 created', delay: 2800 },
+    ];
+
+    lines.forEach(l => {
+      setTimeout(() => {
+        const div = document.createElement('div');
+        div.className = 'line';
+        div.innerHTML = l.html;
+        demoLog.appendChild(div);
+        requestAnimationFrame(() => div.classList.add('show'));
+      }, l.delay);
+    });
+
+    setTimeout(() => {
+      demoReset.style.display = 'inline-block';
+      demoRunning = false;
+      advancePipeline();
+    }, 3200);
+  }
+
+  demoPhoto.addEventListener('click', runDemo);
+  demoPhoto.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); runDemo(); } });
+
+  demoReset.addEventListener('click', () => {
+    demoPhoto.classList.remove('filled');
+    demoPhoto.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span class="cta-label">Tap to photograph an issue</span>';
+    demoLog.innerHTML = '';
+    demoReset.style.display = 'none';
+    resetPipeline();
+  });
+
+  // Pipeline animation: scroll-triggered once, or triggered by demo
+  let pipelineDone = false;
+  function advancePipeline(){
+    if (pipelineDone) return;
+    pipelineDone = true;
+    pipeFill.style.width = '100%';
+    pipeSteps.forEach((s, i) => setTimeout(() => s.classList.add('active'), i * 380));
+  }
+  function resetPipeline(){
+    pipelineDone = false;
+    pipeFill.style.width = '0%';
+    pipeSteps.forEach(s => s.classList.remove('active'));
+  }
+  const pipelineObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => { if (entry.isIntersecting) advancePipeline(); });
+  }, { threshold: 0.5 });
+  pipelineObserver.observe(document.getElementById('pipelineRow'));
+
+  // Map pin tooltips
+  const pinTip = document.getElementById('pinTip');
+  const mapSvg = document.getElementById('mapSvg');
+  document.querySelectorAll('.pin').forEach(pin => {
+    pin.addEventListener('mouseenter', (e) => {
+      const cat = pin.getAttribute('data-cat');
+      const id = pin.getAttribute('data-id');
+      pinTip.textContent = `#${id} · ${cat}`;
+      pinTip.style.opacity = '1';
+    });
+    pin.addEventListener('mousemove', (e) => {
+      const rect = mapSvg.getBoundingClientRect();
+      pinTip.style.left = (e.clientX - rect.left + 14) + 'px';
+      pinTip.style.top = (e.clientY - rect.top - 10) + 'px';
+    });
+    pin.addEventListener('mouseleave', () => { pinTip.style.opacity = '0'; });
+  });
+
+  // Nav shadow on scroll
+  const headerEl = document.querySelector('header');
+  window.addEventListener('scroll', () => {
+    headerEl.classList.toggle('scrolled', window.scrollY > 12);
+  });
+
+  // Scroll reveal for section blocks
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('in'); revealObserver.unobserve(entry.target); } });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+  // Konami easter egg
+  const seq = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+  let pos = 0;
+  window.addEventListener('keydown', (e) => {
+    const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (key === seq[pos]) { pos++; if (pos === seq.length) { document.getElementById('egg').classList.add('show'); pos = 0; } }
+    else { pos = (key === seq[0]) ? 1 : 0; }
+  });
+  document.getElementById('egg').addEventListener('click', () => document.getElementById('egg').classList.remove('show'));
+</script>
+
+</body>
+</html>
